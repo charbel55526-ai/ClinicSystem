@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using ClinicSystem.API.Data;
 using ClinicSystem.API.DTOs;
-using ClinicSystem.API.Models;
+using ClinicSystem.API.Models;                  // this library needed to validate the role
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -22,6 +22,10 @@ namespace ClinicSystem.API.Services
 
         public async Task<AuthResponseDto?> Register(RegisterDto dto)
         {
+            // Validate role
+            if (dto.Role != Roles.Admin && dto.Role != Roles.Doctor && dto.Role != Roles.Patient)
+                return null;
+
             // Check if email already exists
             // const response = await fetch('/api/users'); like react
             if (await _db.Users.AnyAsync(u => u.Email == dto.Email))        //async the C# convention for methods that support await.

@@ -20,7 +20,7 @@ namespace ClinicSystem.API.Controllers
         {
             var result = await _authService.Register(dto);
             if (result == null)
-                return BadRequest("Email already exists");
+                return BadRequest("Ivalid role or Email already exists");
             return Ok(result);
         }
 
