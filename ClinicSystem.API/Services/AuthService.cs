@@ -43,6 +43,14 @@ namespace ClinicSystem.API.Services
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
+            // Auto-create profile based on role
+            if (user.Role == Roles.Patient)
+            {
+                _db.Patients.Add(new Patient { UserId = user.Id });
+                await _db.SaveChangesAsync();
+            }
+            ///////
+
             return new AuthResponseDto
             {
                 Token = GenerateToken(user),

@@ -37,6 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization(); // needed for [Authorize] attribute
 builder.Services.AddScoped<AppointmentService>(); // this is related to appointmentcontroller
+builder.Services.AddScoped<DoctorService>(); // doctor controller and doctor service
 
 var app = builder.Build();
 

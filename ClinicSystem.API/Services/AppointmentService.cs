@@ -25,7 +25,8 @@ namespace ClinicSystem.API.Services
             {
                 DoctorId = dto.DoctorId,
                 PatientId = patient.Id,
-                AppointmentDate = dto.AppointmentDate,
+                // AppointmentDate = dto.AppointmentDate,
+                AppointmentDate = DateTime.SpecifyKind(dto.AppointmentDate, DateTimeKind.Utc),
                 Notes = dto.Notes,
                 Status = "Pending"
             };
