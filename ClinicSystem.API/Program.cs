@@ -15,12 +15,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReact", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+    });
+});
+
 // Add Database
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add Auth Service
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AppointmentService>(); // this is related to appointmentcontroller
+builder.Services.AddScoped<DoctorService>(); // doctor controller and doctor service
 
 // Add JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -36,8 +49,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization(); // needed for [Authorize] attribute
-builder.Services.AddScoped<AppointmentService>(); // this is related to appointmentcontroller
-builder.Services.AddScoped<DoctorService>(); // doctor controller and doctor service
 
 var app = builder.Build();
 
@@ -48,6 +59,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowReact"); // must be before UseAuthentication
 app.UseAuthentication(); // for the tokens
 app.UseAuthorization();
 app.MapControllers();
