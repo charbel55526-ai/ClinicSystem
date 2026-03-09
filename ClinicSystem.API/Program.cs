@@ -21,8 +21,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReact", policy =>
     {
         policy.WithOrigins("http://localhost:5173")
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -58,8 +59,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowReact"); // must be before UseAuthentication
+//app.UseHttpsRedirection();
 app.UseAuthentication(); // for the tokens
 app.UseAuthorization();
 app.MapControllers();
