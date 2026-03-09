@@ -19,7 +19,7 @@ export default function RegisterPage() {
                 role: res.data.role
             }));
 
-            if (res.data.role === 'Doctor') navigate('/doctor');
+            if (res.data.role === 'Doctor') navigate('/doctor/setup');
             else if (res.data.role === 'Patient') navigate('/patient');
         } catch (err) {
             setError('Registration failed. Try again.');

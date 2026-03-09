@@ -4,6 +4,7 @@ import RegisterPage from './pages/RegisterPage';
 import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import DoctorSetup from './pages/DoctorSetup';
 
 // JSX.Element with React.ReactElement
 
@@ -23,6 +24,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/doctor/setup" element={<DoctorSetup />} />
         <Route path="/patient" element={
           <ProtectedRoute role="Patient">
             <PatientDashboard />
