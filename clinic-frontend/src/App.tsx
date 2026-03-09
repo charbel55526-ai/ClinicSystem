@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
@@ -15,6 +16,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/patient" element={<PatientDashboard />} />
         <Route path="/doctor" element={<DoctorDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   );

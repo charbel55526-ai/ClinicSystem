@@ -19,6 +19,7 @@ export default function LoginPage() {
 
             if (res.data.role === 'Doctor') navigate('/doctor');
             else if (res.data.role === 'Patient') navigate('/patient');
+            else if (res.data.role === 'Admin') navigate('/admin');
         } catch (err) {
             setError('Invalid email or password');
         }
