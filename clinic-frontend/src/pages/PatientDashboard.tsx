@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 
@@ -50,6 +51,14 @@ export default function PatientDashboard() {
     };
 
     const bookAppointment = async () => {
+        if (!doctorId) {
+            setMessage('❌ Please select a doctor.');
+            return;
+        }
+        if (!date) {
+            setMessage('❌ Please select a date and time.');
+            return;
+        }
         try {
             await API.post('/Appointment', {
                 doctorId: parseInt(doctorId),
@@ -58,8 +67,12 @@ export default function PatientDashboard() {
             });
             setMessage('Appointment booked successfully!');
             fetchAppointments();
-        } catch {
-            setMessage('Failed to book appointment.');
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                setMessage(err.response?.data || 'Failed to book appointment.');
+            } else {
+                setMessage('Something went wrong.');
+            }
         }
     };
 
@@ -67,8 +80,12 @@ export default function PatientDashboard() {
         try {
             await API.put(`/Appointment/${id}/cancel`);
             fetchAppointments();
-        } catch {
-            setMessage('Failed to cancel appointment.');
+        } catch (err) {
+            if (axios.isAxiosError(err)) {
+                setMessage(err.response?.data || 'Failed to cancel appointment.');
+            } else {
+                setMessage('Something went wrong.');
+            }
         }
     };
 
