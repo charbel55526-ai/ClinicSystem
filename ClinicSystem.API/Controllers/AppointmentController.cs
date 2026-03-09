@@ -69,5 +69,16 @@ namespace ClinicSystem.API.Controllers
             var result = await _appointmentService.GetAllAppointments();
             return Ok(result);
         }
+        // Patient cancels their own appointment
+        [HttpPut("{id}/cancel")]
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> CancelAppointment(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _appointmentService.CancelPatientAppointment(id, userId);
+            if (!result)
+                return NotFound("Appointment not found or not yours");
+            return Ok("Appointment cancelled");
+        }
     }
 }

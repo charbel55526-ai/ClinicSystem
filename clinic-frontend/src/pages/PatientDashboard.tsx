@@ -63,6 +63,15 @@ export default function PatientDashboard() {
         }
     };
 
+    const cancelAppointment = async (id: number) => {
+        try {
+            await API.put(`/Appointment/${id}/cancel`);
+            fetchAppointments();
+        } catch {
+            setMessage('Failed to cancel appointment.');
+        }
+    };
+
     const logout = () => {
         localStorage.clear();
         navigate('/login');
@@ -133,12 +142,23 @@ export default function PatientDashboard() {
                                         <p className="text-sm text-gray-500">{new Date(a.appointmentDate).toLocaleString()}</p>
                                         {a.notes && <p className="text-sm text-gray-400">Notes: {a.notes}</p>}
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${a.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${a.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
                                             a.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
                                                 'bg-yellow-100 text-yellow-700'
-                                        }`}>
-                                        {a.status}
-                                    </span>
+                                            }`}>
+                                            {a.status}
+                                        </span>
+                                        {/*  to cancle appoitment */}
+                                        {a.status === 'Pending' && (
+                                            <button
+                                                onClick={() => cancelAppointment(a.id)}
+                                                className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600"
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))

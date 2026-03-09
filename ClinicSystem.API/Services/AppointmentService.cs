@@ -126,5 +126,19 @@ namespace ClinicSystem.API.Services
                 })
                 .ToListAsync();
         }
+        // Patient cancels their own appointment
+        public async Task<bool> CancelPatientAppointment(int appointmentId, int patientUserId)
+        {
+            var appointment = await _db.Appointments
+                .Include(a => a.Patient)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId && a.Patient.UserId == patientUserId);
+
+            if (appointment == null) return false;
+            if (appointment.Status != "Pending") return false;
+
+            appointment.Status = "Cancelled";
+            await _db.SaveChangesAsync();
+            return true;
+        }
     }
 }
