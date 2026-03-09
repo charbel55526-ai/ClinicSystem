@@ -5,6 +5,15 @@ import PatientDashboard from './pages/PatientDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 
+// JSX.Element with React.ReactElement
+
+const ProtectedRoute = ({ children, role }: { children: React.ReactElement, role: string }) => {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!user) return <Navigate to="/login" />;
+  if (user.role !== role) return <Navigate to="/login" />;
+  return children;
+};
+
 function App() {
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
@@ -14,9 +23,21 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/patient" element={<PatientDashboard />} />
-        <Route path="/doctor" element={<DoctorDashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/patient" element={
+          <ProtectedRoute role="Patient">
+            <PatientDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/doctor" element={
+          <ProtectedRoute role="Doctor">
+            <DoctorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute role="Admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
