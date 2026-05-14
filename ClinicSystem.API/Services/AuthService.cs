@@ -47,9 +47,12 @@ namespace ClinicSystem.API.Services
             if (user.Role == Roles.Patient)
             {
                 _db.Patients.Add(new Patient { UserId = user.Id });
-                await _db.SaveChangesAsync();
             }
-            ///////
+            else if (user.Role == Roles.Doctor)
+            {
+                _db.Doctors.Add(new Doctor { UserId = user.Id, Specialization = "General", Phone = "" });
+            }
+            await _db.SaveChangesAsync();
 
             return new AuthResponseDto
             {
@@ -94,9 +97,10 @@ namespace ClinicSystem.API.Services
             var token = new JwtSecurityToken(
                 claims: claims,
                 expires: DateTime.UtcNow.AddDays(
-                    int.Parse(_config["JwtSettings:ExpiryDays"]!)),
+                    int.TryParse(_config["JwtSettings:ExpiryDays"], out int days) ? days : 7
+                ), // <--- Need to close AddDays and add this comma
                 signingCredentials: credentials
-            );
+                );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

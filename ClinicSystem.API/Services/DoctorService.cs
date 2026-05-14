@@ -66,5 +66,55 @@ namespace ClinicSystem.API.Services
                 })
                 .ToListAsync();
         }
+        // Admin gets all doctors new functions
+        public async Task<List<DoctorResponseDto>> GetAllDoctorsWithDetails()
+        {
+            return await _db.Doctors
+                .Include(d => d.User)
+                .Select(d => new DoctorResponseDto
+                {
+                    Id = d.Id,
+                    FullName = d.User.FullName,
+                    Specialization = d.Specialization,
+                    Phone = d.Phone,
+                    Email = d.User.Email
+                })
+                .ToListAsync();
+        }
+
+        // Admin removes a doctor
+        public async Task<bool> DeleteDoctor(int doctorId)
+        {
+            var doctor = await _db.Doctors.FindAsync(doctorId);
+            if (doctor == null) return false;
+
+            _db.Doctors.Remove(doctor);
+            await _db.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<DoctorResponseDto?> UpdateProfile(int userId, CreateDoctorProfileDto dto)
+        {
+            var doctor = await _db.Doctors
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.UserId == userId);
+
+            if (doctor == null) return null;
+
+            // Update fields
+            doctor.Specialization = dto.Specialization;
+            doctor.Phone = dto.Phone;
+
+            await _db.SaveChangesAsync();
+
+            return new DoctorResponseDto
+            {
+                Id = doctor.Id,
+                FullName = doctor.User.FullName,
+                Specialization = doctor.Specialization,
+                Phone = doctor.Phone,
+                Email = doctor.User.Email
+            };
+        }
     }
 }

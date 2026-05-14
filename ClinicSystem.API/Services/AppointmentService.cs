@@ -2,7 +2,6 @@ using ClinicSystem.API.Data;
 using ClinicSystem.API.DTOs;
 using ClinicSystem.API.Models;
 using Microsoft.EntityFrameworkCore;
-
 namespace ClinicSystem.API.Services
 {
     public class AppointmentService
@@ -14,10 +13,23 @@ namespace ClinicSystem.API.Services
             _db = db;
         }
 
-        // Patient books an appointment
+        // Helper method to avoid repeating the Select logic
+        private IQueryable<AppointmentResponseDto> MapToDto(IQueryable<Appointment> query)
+        {
+            return query.Select(a => new AppointmentResponseDto
+            {
+                Id = a.Id,
+                PatientName = a.Patient.User.FullName,
+                DoctorName = a.Doctor.User.FullName,
+                Specialization = a.Doctor.Specialization,
+                AppointmentDate = a.AppointmentDate,
+                Status = a.Status,
+                Notes = a.Notes
+            });
+        }
+
         public async Task<AppointmentResponseDto?> BookAppointment(int patientUserId, CreateAppointmentDto dto)
         {
-            // Find the patient
             var patient = await _db.Patients.FirstOrDefaultAsync(p => p.UserId == patientUserId);
             if (patient == null) return null;
 
@@ -25,7 +37,6 @@ namespace ClinicSystem.API.Services
             {
                 DoctorId = dto.DoctorId,
                 PatientId = patient.Id,
-                // AppointmentDate = dto.AppointmentDate,
                 AppointmentDate = DateTime.SpecifyKind(dto.AppointmentDate, DateTimeKind.Utc),
                 Notes = dto.Notes,
                 Status = "Pending"
@@ -37,104 +48,68 @@ namespace ClinicSystem.API.Services
             return await GetAppointmentById(appointment.Id);
         }
 
-        // Get single appointment by id
         public async Task<AppointmentResponseDto?> GetAppointmentById(int id)
         {
-            return await _db.Appointments
+            var query = _db.Appointments
                 .Include(a => a.Doctor).ThenInclude(d => d.User)
                 .Include(a => a.Patient).ThenInclude(p => p.User)
-                .Where(a => a.Id == id)
-                .Select(a => new AppointmentResponseDto
-                {
-                    Id = a.Id,
-                    PatientName = a.Patient.User.FullName,
-                    DoctorName = a.Doctor.User.FullName,
-                    Specialization = a.Doctor.Specialization,
-                    AppointmentDate = a.AppointmentDate,
-                    Status = a.Status,
-                    Notes = a.Notes
-                })
-                .FirstOrDefaultAsync();
+                .Where(a => a.Id == id);
+
+            return await MapToDto(query).FirstOrDefaultAsync();
         }
 
-        // Patient sees his appointments
         public async Task<List<AppointmentResponseDto>> GetPatientAppointments(int patientUserId)
         {
-            return await _db.Appointments
-                .Include(a => a.Doctor).ThenInclude(d => d.User)
-                .Include(a => a.Patient).ThenInclude(p => p.User)
+            var query = _db.Appointments
                 .Where(a => a.Patient.UserId == patientUserId)
-                .Select(a => new AppointmentResponseDto
-                {
-                    Id = a.Id,
-                    PatientName = a.Patient.User.FullName,
-                    DoctorName = a.Doctor.User.FullName,
-                    Specialization = a.Doctor.Specialization,
-                    AppointmentDate = a.AppointmentDate,
-                    Status = a.Status,
-                    Notes = a.Notes
-                })
-                .ToListAsync();
+                .OrderByDescending(a => a.AppointmentDate);
+
+            return await MapToDto(query).ToListAsync();
         }
 
-        // Doctor sees his appointments
         public async Task<List<AppointmentResponseDto>> GetDoctorAppointments(int doctorUserId)
         {
-            return await _db.Appointments
-                .Include(a => a.Doctor).ThenInclude(d => d.User)
-                .Include(a => a.Patient).ThenInclude(p => p.User)
+            var query = _db.Appointments
                 .Where(a => a.Doctor.UserId == doctorUserId)
-                .Select(a => new AppointmentResponseDto
-                {
-                    Id = a.Id,
-                    PatientName = a.Patient.User.FullName,
-                    DoctorName = a.Doctor.User.FullName,
-                    Specialization = a.Doctor.Specialization,
-                    AppointmentDate = a.AppointmentDate,
-                    Status = a.Status,
-                    Notes = a.Notes
-                })
-                .ToListAsync();
+                .OrderByDescending(a => a.AppointmentDate);
+
+            return await MapToDto(query).ToListAsync();
         }
 
-        // Doctor updates appointment status
         public async Task<bool> UpdateStatus(int appointmentId, string status)
         {
             var appointment = await _db.Appointments.FindAsync(appointmentId);
             if (appointment == null) return false;
 
-            appointment.Status = status;
+            appointment.Status = status.Trim();
             await _db.SaveChangesAsync();
             return true;
         }
 
-        // Admin sees all appointments
-        public async Task<List<AppointmentResponseDto>> GetAllAppointments()
+        public async Task<List<AppointmentResponseDto>> GetAllAppointments(string? search = null)
         {
-            return await _db.Appointments
-                .Include(a => a.Doctor).ThenInclude(d => d.User)
-                .Include(a => a.Patient).ThenInclude(p => p.User)
-                .Select(a => new AppointmentResponseDto
-                {
-                    Id = a.Id,
-                    PatientName = a.Patient.User.FullName,
-                    DoctorName = a.Doctor.User.FullName,
-                    Specialization = a.Doctor.Specialization,
-                    AppointmentDate = a.AppointmentDate,
-                    Status = a.Status,
-                    Notes = a.Notes
-                })
-                .ToListAsync();
+            var query = _db.Appointments.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string searchLower = search.ToLower();
+                query = query.Where(a =>
+                    a.Patient.User.FullName.ToLower().Contains(searchLower) ||
+                    a.Doctor.User.FullName.ToLower().Contains(searchLower) ||
+                    a.Doctor.Specialization.ToLower().Contains(searchLower)
+                );
+            }
+
+            return await MapToDto(query.OrderByDescending(a => a.AppointmentDate)).ToListAsync();
         }
-        // Patient cancels their own appointment
+
         public async Task<bool> CancelPatientAppointment(int appointmentId, int patientUserId)
         {
             var appointment = await _db.Appointments
                 .Include(a => a.Patient)
                 .FirstOrDefaultAsync(a => a.Id == appointmentId && a.Patient.UserId == patientUserId);
 
-            if (appointment == null) return false;
-            if (appointment.Status != "Pending") return false;
+            if (appointment == null || appointment.Status != "Pending") return false;
 
             appointment.Status = "Cancelled";
             await _db.SaveChangesAsync();

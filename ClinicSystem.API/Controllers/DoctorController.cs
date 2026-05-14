@@ -40,7 +40,7 @@ namespace ClinicSystem.API.Controllers
         }
 
         // Get my profile (Doctor only)
-        [HttpGet("profile")]
+        [HttpGet("me")]
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> GetMyProfile()
         {
@@ -48,6 +48,33 @@ namespace ClinicSystem.API.Controllers
             var result = await _doctorService.GetDoctorByUserId(userId);
             if (result == null)
                 return NotFound("Profile not found");
+            return Ok(result);
+        }
+        // Admin removes a doctor
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteDoctor(int id)
+        {
+            var result = await _doctorService.DeleteDoctor(id);
+            if (!result)
+                return NotFound("Doctor not found");
+            return Ok("Doctor removed");
+        }
+
+
+        // Inside DoctorController.cs
+
+        // PUT: api/Doctor/profile (Added to allow updating)
+        [HttpPut("profile")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> UpdateProfile(CreateDoctorProfileDto dto)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _doctorService.UpdateProfile(userId, dto);
+
+            if (result == null)
+                return NotFound("Doctor profile not found");
+
             return Ok(result);
         }
     }
